@@ -1,0 +1,13 @@
+.env
+.venv/
+__pycache__/
+*.pyc
+.llm_cache.db
+qdrant_data/
+*.db
+.DS_Store
+.ruff_cache/
+dist/
+*.egg-info/
+__pycache__/
+*.egg

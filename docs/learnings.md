@@ -1,0 +1,1 @@
+- Week 1: working run/compare, Postgres, golden cases, React dashboard, README + design.md
