@@ -2,8 +2,7 @@ from __future__ import annotations
 import argparse
 from harness.runner import run_suite
 from harness import store
-from harness.scorers import passed
-import json
+from harness.ingest import ingest
 
 
 def main():
@@ -20,6 +19,11 @@ def main():
     p_cmp.add_argument("a")
     p_cmp.add_argument("b")
 
+    p_ing = sub.add_parser("ingest", help="Ingest corpus into Qdrant")
+    p_ing.add_argument("--corpus", default="corpus")
+    p_ing.add_argument("--size", type=int, default=800)
+    p_ing.add_argument("--overlap", type=int, default=100)
+
     args = parser.parse_args()
 
     if args.cmd == "run":
@@ -30,14 +34,16 @@ def main():
         for name, rows in ((args.a, ra), (args.b, rb)):
             k = sum(1 for r in rows if r["passed"])
             n = len(rows)
-            print(f"{name:<14} pass {k}/{n} = {k/n:.1%}")
-        # simple case-by-case diff
+            print(f"{name:<14} pass {k}/{n} = {k/n:.1%}" if n else f"{name:<14} no results")
         print("\nChanged cases:")
         pa = {r["case_id"]: r["passed"] for r in ra}
         pb = {r["case_id"]: r["passed"] for r in rb}
         for cid in sorted(set(pa) | set(pb)):
             if pa.get(cid) != pb.get(cid):
                 print(f"  {cid}: {pa.get(cid)} → {pb.get(cid)}")
+    elif args.cmd == "ingest":
+        n = ingest(args.corpus, args.size, args.overlap)
+        print(f"Ingested {n} chunks from {args.corpus}")
 
 
 if __name__ == "__main__":
