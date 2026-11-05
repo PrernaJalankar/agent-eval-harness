@@ -1,6 +1,5 @@
 from __future__ import annotations
-from typing import Any
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 import yaml
 from pathlib import Path
 
@@ -16,14 +15,13 @@ class Case(BaseModel):
     must_contain: list[str] = []
     must_not_contain: list[str] = []
     max_tool_calls: int = 8
-    # later weeks will add these:
     relevant_docs: list[str] = []
     arg_checks: list[dict] = []
 
 
 class RunResult(BaseModel):
     answer: str = ""
-    tool_calls: list[dict] = []          # [{"name": ..., "args": {...}}]
+    tool_calls: list[dict] = []
     retrieved: list[str] = []
     contexts: list[str] = []
     latency_s: float = 0.0
