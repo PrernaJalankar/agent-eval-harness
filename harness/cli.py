@@ -3,6 +3,7 @@ import argparse
 from harness.runner import run_suite
 from harness import store
 from harness.ingest import ingest
+from harness.stats import consistency, paired_bootstrap, per_case_rates, wilson
 
 
 def main():
@@ -32,15 +33,19 @@ def main():
         ra = store.results(store.latest_run_id(args.a))
         rb = store.results(store.latest_run_id(args.b))
         for name, rows in ((args.a, ra), (args.b, rb)):
-            k = sum(1 for r in rows if r["passed"])
-            n = len(rows)
-            print(f"{name:<14} pass {k}/{n} = {k/n:.1%}" if n else f"{name:<14} no results")
-        print("\nChanged cases:")
-        pa = {r["case_id"]: r["passed"] for r in ra}
-        pb = {r["case_id"]: r["passed"] for r in rb}
-        for cid in sorted(set(pa) | set(pb)):
-            if pa.get(cid) != pb.get(cid):
-                print(f"  {cid}: {pa.get(cid)} → {pb.get(cid)}")
+            k, n = sum(1 for r in rows if r["passed"]), len(rows)
+            if n == 0:
+                print(f"{name:<14} no results")
+                continue
+            lo, hi = wilson(k, n)
+            lat = sum(r["latency"] or 0 for r in rows) / n
+            print(
+                f"{name:<14} pass {k/n:.1%} (95% CI {lo:.1%}-{hi:.1%})  "
+                f"consistency {consistency(rows):.0%}  latency {lat:.1f}s"
+            )
+        diff, lo, hi = paired_bootstrap(per_case_rates(ra), per_case_rates(rb))
+        verdict = "significant" if lo > 0 or hi < 0 else "not significant"
+        print(f"\ndelta pass rate {diff:+.1%} (95% CI {lo:+.1%} to {hi:+.1%}) -> {verdict}")
     elif args.cmd == "ingest":
         n = ingest(args.corpus, args.size, args.overlap)
         print(f"Ingested {n} chunks from {args.corpus}")

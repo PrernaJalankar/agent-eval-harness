@@ -1,2 +1,3 @@
 - Week 1: working run/compare, Postgres, golden cases, React dashboard, README + design.md
 - Week 3: retrieval recall/MRR, failure_type attribution, 15/15 with recall=1.0 on RAG
+- Week 4: Wilson CI, paired bootstrap compare; free-model 429s show up as significant regression
